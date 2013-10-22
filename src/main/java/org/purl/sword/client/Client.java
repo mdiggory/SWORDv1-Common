@@ -36,30 +36,17 @@
  */
 package org.purl.sword.client;
 
+import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.*;
+import org.apache.log4j.Logger;
+import org.purl.sword.base.*;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-
 import java.util.Properties;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.FileRequestEntity;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.log4j.Logger;
-import org.purl.sword.base.ChecksumUtils;
-import org.purl.sword.base.DepositResponse;
-import org.purl.sword.base.HttpHeaders;
-import org.purl.sword.base.SWORDErrorDocument;
-import org.purl.sword.base.ServiceDocument;
-import org.purl.sword.base.SwordValidationInfo;
-import org.purl.sword.base.UnmarshallException;
 
 /**
  * This is an example Client implementation to demonstrate how to connect to a
@@ -371,7 +358,12 @@ public class Client implements SWORDClient {
 		
 		try {
 			if (message.isUseMD5()) {
-				String md5 = ChecksumUtils.generateMD5(message.getFilepath());
+                String md5;
+                if(message.getRecord()==null){
+                        md5= ChecksumUtils.generateMD5(message.getFilepath());
+                }else{
+                        md5=ChecksumUtils.generateMD5(message.getRecord());
+                }
 				if (message.getChecksumError()) {
 					md5 = "1234567890";
 				}
@@ -382,7 +374,7 @@ public class Client implements SWORDClient {
 				}
 			}
 
-			String filename = message.getFilename();
+			String filename = message.getFilepath()==null ? "" : message.getFilename();
 			if (! "".equals(filename)) {
 				httppost.addRequestHeader(new Header(
 						HttpHeaders.CONTENT_DISPOSITION, " filename="
@@ -422,10 +414,16 @@ public class Client implements SWORDClient {
 				httppost.addRequestHeader(new Header(
 						HttpHeaders.USER_AGENT, userAgent));
 			}
-			
-			
-			FileRequestEntity requestEntity = new FileRequestEntity(
-			   new File(message.getFilepath()), message.getFiletype());
+
+            RequestEntity requestEntity;
+			if(message.getRecord() != null){
+                requestEntity = new ByteArrayRequestEntity(
+                            message.getRecord(), message.getFiletype());
+
+            }else{
+                requestEntity = new FileRequestEntity(
+                            new File(message.getFilepath()), message.getFiletype());
+            }
 			httppost.setRequestEntity(requestEntity);
 
 			client.executeMethod(httppost);
