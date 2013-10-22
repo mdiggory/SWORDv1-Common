@@ -116,7 +116,9 @@ public class PostMessage
    /**
     * True if the verbose operation is requested. 
     */
-   private boolean verbose; 
+   private boolean verbose;
+
+   private byte[] record;
 
    /**
     * The packaging format for the deposit.
@@ -177,6 +179,24 @@ public class PostMessage
       this.filepath = filepath;
    }
 
+/**
+ * Get the record. This is returned as a byte array
+ */
+public byte[] getRecord()
+{
+
+        return record;
+}
+
+/**
+ * Set the record.
+ *
+ * @param rec The record byte array.
+ */
+public void setRecord(byte[] rec)
+{
+        this.record = rec;
+}
    /**
     * Get the destination collection. 
     * 
